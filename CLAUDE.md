@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # wrdrb
 
 A personal wardrobe manager. It keeps an inventory of the owner's clothing and
@@ -73,16 +75,34 @@ items"). Dimensions, all first-class:
 Rules live in pure, unit-tested functions with no I/O so they can be exercised
 exhaustively.
 
-## Tech stack
+## Tech stack (decided)
 
 - Mobile-first **PWA** (installable, camera capture front and center — adding
   items happens standing next to the closet).
-- **TypeScript end-to-end**: Next.js (App Router) with Serwist for the service
-  worker, or an equivalent Vite + React PWA setup if Next.js fights the PWA
-  requirements — decide at implementation start and record the choice here.
-- **SQLite** via Drizzle ORM for persistence; single-user, no auth in V1.
-- Color extraction with a plain image-processing library (e.g. node-vibrant) —
-  no external AI services.
+- **Next.js 16 (App Router, Turbopack)**, TypeScript, Tailwind 4. Note: Next 16
+  differs from older training data — consult `node_modules/next/dist/docs/`
+  before using unfamiliar APIs.
+- **No Serwist.** PWA is a generated `src/app/manifest.ts` plus a minimal
+  hand-rolled `public/sw.js` registered by
+  `src/app/service-worker-registration.tsx` — this follows Next's own PWA
+  guide. Keep the service worker boring until offline caching is a real
+  requirement.
+- **SQLite** (better-sqlite3) via **Drizzle ORM**; single-user, no auth in V1.
+  DB file lives in `data/` (gitignored); path overridable via `WRDRB_DB_PATH`.
+  Migrations are generated into `drizzle/` and committed.
+- Color extraction with **node-vibrant** — no external AI services.
+- Tests run with **vitest** (`npm test`); config in `vitest.config.ts`.
+
+## Repo layout
+
+- `src/engine/` — the pure matching engine (`types.ts`, `rules.ts`,
+  `outfit.ts`) and its unit tests. No I/O or framework imports allowed here.
+- `src/db/` — Drizzle schema and client. `drizzle.config.ts` +
+  `npm run db:generate` / `npm run db:push` manage migrations.
+- `src/app/` — Next.js App Router pages (`/`, `/inventory`, `/outfits`),
+  manifest, and service-worker registration.
+- `public/` — static assets: `sw.js`, placeholder icons (`icon-192/512.png`,
+  solid-color stand-ins to be replaced with real artwork).
 
 ## Conventions
 
